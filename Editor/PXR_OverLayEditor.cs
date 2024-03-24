@@ -112,7 +112,10 @@ namespace Unity.XR.PXR.Editor
 
                 }
 
-                if (overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Quad || overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Cylinder || overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Equirect || overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Eac)
+                if (overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Quad ||
+                    overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Cylinder ||
+                    overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Equirect ||
+                    overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Eac)
                 {
                     guiContent.text = "Texture Rects";
                     overlayTarget.useImageRect = EditorGUILayout.Toggle(guiContent, overlayTarget.useImageRect);
@@ -151,7 +154,8 @@ namespace Unity.XR.PXR.Editor
                             overlayTarget.srcRectRight = new Rect(0.5f, 0, 0.5f, 1);
                         }
 
-                        if (overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Quad || overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Equirect)
+                        if (overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Quad ||
+                            overlayTarget.overlayShape == PXR_OverLay.OverlayShape.Equirect)
                         {
                             guiContent.text = "Destination Rects";
                             overlayTarget.destinationRect = (PXR_OverLay.DestinationRect)EditorGUILayout.EnumPopup(guiContent, overlayTarget.destinationRect);
@@ -207,7 +211,8 @@ namespace Unity.XR.PXR.Editor
                     guiContent.text = "Model Type";
                     overlayTarget.eacModelType = (PXR_OverLay.EACModelType)EditorGUILayout.EnumPopup(guiContent, overlayTarget.eacModelType);
 
-                    if (PXR_OverLay.EACModelType.Eac360ViewPort == overlayTarget.eacModelType || PXR_OverLay.EACModelType.Eac180ViewPort == overlayTarget.eacModelType)
+                    if (PXR_OverLay.EACModelType.Eac360ViewPort == overlayTarget.eacModelType ||
+                        PXR_OverLay.EACModelType.Eac180ViewPort == overlayTarget.eacModelType)
                     {
 
                         guiContent.text = "Offset Pos Left";

@@ -352,17 +352,11 @@ namespace Unity.XR.PXR
         Remote = 2,
     }
 
-    /// <summary>
-    /// Video seethrough effect-related parameters.
-    /// </summary>
     public enum PxrLayerEffect
     {
         Contrast = 0,
         Saturation = 1,
         Brightness = 2,
-        /// <summary>
-        /// Color temperature.
-        /// </summary>
         Colortemp = 3,
     }
 
@@ -956,6 +950,8 @@ namespace Unity.XR.PXR
         PxrLayerFlagEnableFixedFoveatedSharpening = 1 << 18,
         PxrLayerFlagEnableSelfAdaptiveSharpening = 1 << 19,
         PxrLayerFlagPremultipliedAlpha = 1 << 20,
+        PxrLayerFlagColorSpaceHdrPQ = 1 << 22,
+        PxrLayerFlagColorSpaceHdrHLG = 1 << 23
     }
 
     public enum PxrControllerKeyMap
@@ -1667,7 +1663,7 @@ namespace Unity.XR.PXR
 
     public static class PXR_Plugin
     {
-        private const string PXR_SDK_Version = "2.4.3";
+        private const string PXR_SDK_Version = "2.5.3";
         private const string PXR_PLATFORM_DLL = "PxrPlatform";
         public const string PXR_API_DLL = "pxr_api";
         private static int PXR_API_Version = 0;
@@ -1921,6 +1917,35 @@ namespace Unity.XR.PXR
 
         [DllImport(PXR_API_DLL, CallingConvention = CallingConvention.Cdecl)]
         private static extern int Pxr_SubmitLayerQuad2(PxrLayerQuad2 layer);
+
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_GetLayerNextImageIndexByRender(int layerId, ref int imageIndex);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerQuadByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerQuad2ByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerCylinderByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerCylinder2ByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerEquirectByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerEquirect2ByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerCube2ByRender(IntPtr ptr);
+
+        [DllImport(PXR_PLATFORM_DLL, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pxr_SubmitLayerEac2ByRender(IntPtr ptr);
+
 
         [DllImport(PXR_API_DLL, CallingConvention = CallingConvention.Cdecl)]
         private static extern int Pxr_SubmitLayerCylinder(PxrLayerCylinder layer);
@@ -2682,6 +2707,261 @@ namespace Unity.XR.PXR
             private static AndroidJavaClass batteryReceiver = new AndroidJavaClass("com.psmart.aosoperation.BatteryReceiver");
             private static AndroidJavaClass audioReceiver = new AndroidJavaClass("com.psmart.aosoperation.AudioReceiver");
 #endif
+
+            public static bool UPxr_StopBatteryReceiver()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    batteryReceiver.CallStatic("pxr_StopReceiver", currentActivity);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_StopBatteryReceiver Error :" + e);
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static bool UPxr_StartBatteryReceiver(string objName)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    batteryReceiver.CallStatic("pxr_StartReceiver", currentActivity, objName);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_StartBatteryReceiver Error :" + e);
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            private static bool isInitAudio = false;
+
+            public static bool UPxr_InitAudioDevice()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    if (isInitAudio) return true;
+                    if (sysActivity == null) return false;
+                    sysActivity.CallStatic("pxr_InitAudioDevice", currentActivity);
+                    isInitAudio = true;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_InitAudioDevice Error :" + e);
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static bool UPxr_SetBrightness(int brightness)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    sysActivity.CallStatic("pxr_SetScreen_Brightness", brightness, currentActivity);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_SetBrightness Error :" + e);
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static int UPxr_GetCurrentBrightness()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                int currentlight = 0;
+                try
+                {
+                    currentlight = sysActivity.CallStatic<int>("pxr_GetScreen_Brightness", currentActivity);
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_GetCurrentBrightness Error :" + e);
+                }
+
+                return currentlight;
+#else
+                return 0;
+#endif
+            }
+
+            public static int[] UPxr_GetScreenBrightnessLevel()
+            {
+                int[] currentlight = { 0 };
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    currentlight = sysActivity.CallStatic<int[]>("getScreenBrightnessLevel");
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_GetScreenBrightnessLevel Error :" + e);
+                }
+#endif
+                return currentlight;
+            }
+
+            public static void UPxr_SetScreenBrightnessLevel(int vrBrightness, int level)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    sysActivity.CallStatic("setScreenBrightnessLevel", vrBrightness, level);
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_SetScreenBrightnessLevel Error :" + e);
+                }
+#endif
+            }
+
+            public static bool UPxr_StartAudioReceiver(string startreceivre)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    if (!UPxr_InitAudioDevice()) return false;
+                    audioReceiver.CallStatic("pxr_StartReceiver", currentActivity, startreceivre);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_StartAudioReceiver Error :" + e);
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static bool UPxr_StopAudioReceiver()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    audioReceiver.CallStatic("pxr_StopReceiver", currentActivity);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_StopAudioReceiver Error :" + e);
+                    return false;
+                }
+
+#else
+                return true;
+#endif
+            }
+
+            public static int UPxr_GetMaxVolumeNumber()
+            {
+                int maxvolm = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    maxvolm = sysActivity.CallStatic<int>("pxr_GetMaxAudionumber");
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_GetMaxVolumeNumber Error :" + e);
+                }
+#endif
+                return maxvolm;
+            }
+
+            public static int UPxr_GetCurrentVolumeNumber()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                int currentvolm = 0;
+                try
+                {
+                    currentvolm = sysActivity.CallStatic<int>("pxr_GetAudionumber");
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_GetCurrentVolumeNumber Error :" + e);
+                }
+
+                return currentvolm;
+#else
+                return 0;
+#endif
+            }
+
+            public static bool UPxr_VolumeUp()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    sysActivity.CallStatic("pxr_UpAudio");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_VolumeUp Error :" + e.ToString());
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static bool UPxr_VolumeDown()
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    sysActivity.CallStatic("pxr_DownAudio");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_VolumeDown Error :" + e.ToString());
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+            public static bool UPxr_SetVolumeNum(int volume)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try
+                {
+                    sysActivity.CallStatic("pxr_ChangeAudio", volume);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    PLog.e(TAG, "UPxr_SetVolumeNum Error :" + e.ToString());
+                    return false;
+                }
+#else
+                return true;
+#endif
+            }
+
+           
             public static string UPxr_GetDeviceMode()
             {
                 string devicemode = "";
@@ -2784,15 +3064,7 @@ namespace Unity.XR.PXR
                 PLog.d(TAG, "UPxr_GetPerformanceLevels() result:" + result + ", level:" + level);
                 return level;
             }
-
-            public static string UPxr_GetDeviceSN()
-            {
-                string serialNum = "UNKONWN";
-#if UNITY_ANDROID && !UNITY_EDITOR
-                serialNum = sysActivity.CallStatic<string>("getDeviceSN");
-#endif
-                return serialNum;
-            }
+            
 
             public static void UPxr_Sleep()
             {
@@ -3471,7 +3743,8 @@ namespace Unity.XR.PXR
 
             public static void UPxr_CreateLayerParam(PxrLayerParam layerParam)
             {
-                PLog.d(TAG, "UPxr_CreateLayerParam() ");
+
+                PLog.i(TAG, $"Pxr_CreateLayerParam() layerParam.layerId={layerParam.layerId}, layerShape={layerParam.layerShape}, layerType={layerParam.layerType}, width={layerParam.width}, height={layerParam.height}, layerFlags={layerParam.layerFlags}, format={layerParam.format}, layerLayout={layerParam.layerLayout}.");
 #if UNITY_ANDROID && !UNITY_EDITOR
                 Pxr_CreateLayerParam(layerParam);
 #endif
@@ -3591,7 +3864,99 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerQuad2(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerQuad2() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerQuad2() layer:" + layer.header.layerId + " result:" + result);
+                return result == -8;
+            }
+
+
+            public static bool UPxr_GetLayerNextImageIndexByRender(int layerId, ref int imageIndex)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_GetLayerNextImageIndexByRender(layerId, ref imageIndex);
+#endif
+                PLog.d(TAG, "UPxr_GetLayerNextImageIndexByRender() layerId:" + layerId + " imageIndex:" + imageIndex);
+                return result == -8;
+            }
+
+
+            public static bool UPxr_SubmitLayerQuadByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerQuadByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerQuadByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+            
+            public static bool UPxr_SubmitLayerQuad2ByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerQuad2ByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerQuad2ByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerCylinderByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerCylinderByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerCylinderByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerCylinder2ByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerCylinder2ByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerCylinder2ByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerEquirectByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerEquirectByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerEquirectByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerEquirect2ByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerEquirect2ByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerEquirect2ByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerCube2ByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerCube2ByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerCube2ByRender() ptr:" + ptr + " result:" + result);
+                return result == -8;
+            }
+
+            public static bool UPxr_SubmitLayerEac2ByRender(IntPtr ptr)
+            {
+                int result = 0;
+#if UNITY_ANDROID && !UNITY_EDITOR
+                result = Pxr_SubmitLayerEac2ByRender(ptr);
+#endif
+                PLog.d(TAG, "UPxr_SubmitLayerEac2ByRender() ptr:" + ptr + " result:" + result);
                 return result == -8;
             }
 
@@ -3611,7 +3976,7 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerCylinder2(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerCylinder2() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerCylinder2() layer:" + layer.header.layerId + " result:" + result);
                 return result == -8;
             }
 
@@ -3621,7 +3986,7 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerEquirect(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerEquirect() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerEquirect() layer:" + layer.header.layerId + " result:" + result);
                 return result == -8;
             }
 
@@ -3631,7 +3996,7 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerEquirect2(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerEquirect2() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerEquirect2() layer:" + layer.header.layerId + " result:" + result);
                 return result == -8;
             }
 
@@ -3641,7 +4006,7 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerCube2(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerCube2() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerCube2() layer:" + layer.header.layerId + " result:" + result);
                 return result;
             }
 
@@ -3651,7 +4016,7 @@ namespace Unity.XR.PXR
 #if UNITY_ANDROID && !UNITY_EDITOR
                 result = Pxr_SubmitLayerEac2(layer);
 #endif
-                PLog.d(TAG, "UPxr_SubmitLayerEac2() layer:" + layer + " result:" + result);
+                PLog.d(TAG, "UPxr_SubmitLayerEac2() layer:" + layer.header.layerId + " result:" + result);
                 return result;
             }
 

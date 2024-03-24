@@ -418,48 +418,16 @@ namespace Unity.XR.PXR
             return PXR_Plugin.Boundary.UPxr_SetSeeThroughBackground(state);
         }
 
-        /// <summary>
-        /// Enables/disables video seethrough effect.
-        /// </summary>
-        /// <param name="value">Specifies whether to enable or disable video seethrough effect:
-        /// * `true`: enable
-        /// * `false`: disable
-        /// </param>
-        /// <returns>`0` indicates a success and other values indicate a failure.</returns>
         public static int EnableVideoSeeThroughEffect(bool value)
         {
             return PXR_Plugin.MixedReality.UPxr_EnableVideoSeeThroughEffect(value);
         }
 
-        /// <summary>
-        /// Sets video seethrough effect-related parameters.
-        /// </summary>
-        /// <param name="type">Specifies the parameter to set.
-        /// `PxrLayerEffect` enumerations:
-        /// * `Contrast = 0`
-        /// * `Saturation = 1`
-        /// * `Brightness = 2`
-        /// * `Colortemp = 3`: color temperature
-        /// </param>
-        /// <param name="value">Specifies the final value that the current value of the parameter changes to. Value range: [-50,50]. The default value is 0.</param>
-        /// <param name="duration">Specifies the duration during which the current value of the specified parameter gradually changes to the specified value.
-        /// If the duration is set to 0, the current value of the specified parameter immediately changes to the specified value.
-        /// </param>
-        /// <returns>`0` indicates a success and other values indicate a failure.</returns>
         public static int SetVideoSeeThroughEffect(PxrLayerEffect type,float value,float duration)
         {
             return PXR_Plugin.MixedReality.UPxr_SetVideoSeeThroughEffect(type, value, duration);
         }
 
-        /// <summary>
-        /// Sets a LUT texture for video seethrough.
-        /// </summary>
-        /// <param name="texture">Passes a standard LUT texture. The size of the texture should not exceed 512*512 pixels.
-        /// @note The imported LUT texture needs to be converted to the RGBA32 format in order to obtain the corresponding RGBA values correctly.
-        /// </param>
-        /// <param name="row">Passes the number of rows in the LUT texture.</param>
-        /// <param name="col">Passes the number of columns in the LUT texture.</param>
-        /// <returns>`0` indicates a success and other values indicate a failure.</returns>
         public static int SetVideoSeeThroughLut(Texture2D texture, int row, int col)
         {
             var data = texture.GetRawTextureData();

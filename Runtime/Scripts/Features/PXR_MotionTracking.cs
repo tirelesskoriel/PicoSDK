@@ -109,7 +109,7 @@ namespace Unity.XR.PXR
     }
 
     /// <summary>
-    /// The information to pass for starting eye tracking. This information remains effective during the period when eye tracking is enabled.
+    /// The information to pass for starting eye tracking.
     /// </summary>
     public struct EyeTrackingStartInfo
     {
@@ -173,7 +173,7 @@ namespace Unity.XR.PXR
     }
 
     /// <summary>
-    /// The information to pass for getting eye tracking data. Should be called at every frame when you need to update eye tracking data.
+    /// The information to pass for getting eye tracking data.
     /// </summary>
     public struct EyeTrackingDataGetInfo
     {
@@ -196,27 +196,24 @@ namespace Unity.XR.PXR
         }
     }
 
-    /// <summary>
-    /// The data of the eye.
-    /// </summary>
+    public struct PxrPose
+    {
+        public PxrVector3f position;
+        public PxrVector4f orientation;
+        public override string ToString()
+        {
+            return string.Format("orientation :({0},{1},{2},{3}) position:({4},{5},{6})",
+                orientation.x.ToString("F6"), orientation.y.ToString("F6"), orientation.z.ToString("F6"), orientation.w.ToString("F6"),
+                position.x.ToString("F6"), position.y.ToString("F6"), position.z.ToString("F6"));
+        }
+    };
+
     public struct PerEyeData
     {
         private int apiVersion;
-        /// <summary>
-        /// The pose (postion and orientation) of the eye.
-        /// </summary>
-        public Posef pose;
-        /// <summary>
-        /// Whether the pose data is valid.
-        /// </summary>
+        public PxrPose pose;
         public byte isPoseValid;
-        /// <summary>
-        /// The openness of the eye, which is a float value ranges from `0.0` to `1.0`. `0.0` indicates completely closed, `1.0` indicates completely open.
-        /// </summary>
         public float openness;
-        /// <summary>
-        /// Whether the openness value is valid.
-        /// </summary>
         public byte isOpennessValid;
         public void SetVersion(int version)
         {
@@ -228,17 +225,10 @@ namespace Unity.XR.PXR
         }
     }
 
-    /// <summary>
-    /// Eye tracking data.
-    /// </summary>
     public struct EyeTrackingData
     {
         private int apiVersion;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = (int)PerEyeUsage.EyeCount)]
-        /// <summary>
-        /// Eye data. Index `0`: left eye. Index `1`: right eye. Index `2`: combined eyes (left and right eyes).
-        /// @note Currently, only index `2` returns data.
-        /// </summary>
         public PerEyeData[] eyeDatas;
         public void SetVersion(int version)
         {
@@ -257,11 +247,11 @@ namespace Unity.XR.PXR
     public unsafe struct EyePupilInfo
     {
         /// <summary>
-        /// The diameter (unit: pixels) of the left eye's pupil.
+        /// The diameter (unit: millimeters) of the left eye's pupil.
         /// </summary>
         public float leftEyePupilDiameter;
         /// <summary>
-        /// The diameter (unit: pixels) of the right eye's pupil.
+        /// The diameter (unit: millimeters) of the right eye's pupil.
         /// </summary>
         public float rightEyePupilDiameter;
         /// <summary>
@@ -329,7 +319,7 @@ namespace Unity.XR.PXR
     }
 
     /// <summary>
-    /// The information to pass for starting eye tracking.
+    /// The information to pass for starting face tracking.
     /// </summary>
     public struct FaceTrackingStartInfo
     {
@@ -357,7 +347,7 @@ namespace Unity.XR.PXR
         /// <summary>
         /// Determines whether to pause face tracking.
         /// * `0`: pause
-        /// * `1`: do not pause, directly stop face tracking
+        /// * `1`: do not pause
         /// </summary>
         public byte pause;
         public void SetVersion(int version)
@@ -550,9 +540,7 @@ namespace Unity.XR.PXR
         //PICO4E
         /// <summary>
         /// Gets the opennesses of the left and right eyes.
-        /// @note
-        /// - Supported by PICO 4 Enterprise.
-        /// - To use this API, you need to add '<meta-data android:name="pvr.app.et_tob_advance" android:value="true"/>' to the app's AndroidManifest file.
+        /// @note Supported by PICO 4 Enterprise.
         /// </summary>
         /// <param name="leftEyeOpenness">The openness of the left eye, which is a float value ranges from `0.0` to `1.0`. `0.0` indicates completely closed, `1.0` indicates completely open.</param>
         /// <param name="rightEyeOpenness">The openness of the right eye, which is a float value ranges from `0.0` to `1.0`. `0.0` indicates completely closed, `1.0` indicates completely open.</param>
@@ -564,9 +552,7 @@ namespace Unity.XR.PXR
 
         /// <summary>
         /// Gets the information about the pupils of both eyes.
-        /// @note
-        /// - Supported by PICO 4 Enterprise.
-        /// - To use this API, you need to add '<meta-data android:name="pvr.app.et_tob_advance" android:value="true"/>' to the app's AndroidManifest file.
+        /// @note Supported by PICO 4 Enterprise.
         /// </summary>
         /// <param name="eyePupilPosition">Returns the diameters and positions of both pupils.</param>
         /// <returns>Returns `0` for success and other values for failure.</returns>
@@ -575,37 +561,11 @@ namespace Unity.XR.PXR
             return PXR_Plugin.MotionTracking.UPxr_GetEyePupilInfo(ref eyePupilPosition);
         }
 
-        /// <summary>
-        /// Gets the poses of the left and right eyes.
-        /// @note
-        /// - Supported by PICO 4 Enterprise.
-        /// - To use this API, you need to add '<meta-data android:name="pvr.app.et_tob_advance" android:value="true"/>' to the app's AndroidManifest file.
-        /// </summary>
-        /// <param name="timestamp">Returns the timestamp (unit: nanosecond) of the eye pose information.</param>
-        /// <param name="leftEyePose">Returns the position and rotation of the left eye.</param>
-        /// <param name="rightPose">Returns the position and rotation of the right eye.</param>
-        /// <returns>Returns `0` for success and other values for failure.</returns>
         public static int GetPerEyePose(ref long timestamp, ref Posef leftEyePose, ref Posef rightPose)
         {
             return PXR_Plugin.MotionTracking.UPxr_GetPerEyePose(ref timestamp, ref leftEyePose, ref rightPose);
         }
 
-        /// <summary>
-        /// Gets whether the left and right eyes blinked.
-        /// @note
-        /// - Supported by PICO 4 Enterprise.
-        /// - To use this API, you need to add '<meta-data android:name="pvr.app.et_tob_advance" android:value="true"/>' to the app's AndroidManifest file.
-        /// </summary>
-        /// <param name="timestamp">Returns the timestamp (unit: nanosecond) of the eye blink information.</param>
-        /// <param name="isLeftBlink">Returns whether the left eye blinked:
-        /// * `true`: blinked (the user's left eye is closed, which will usually open again immediately to generate a blink event)
-        /// * `false`: didn't blink (the user's left eye is open)
-        /// </param>
-        /// <param name="isRightBlink">Returns whether the right eye blined:
-        /// * `true`: blinked (the user's right eye is closed,  which will usually open again immediately to generate a blink event)
-        /// * `false`: didn't blink (the user's right eye is open)
-        /// </param>
-        /// <returns>Returns `0` for success and other values for failure.</returns>
         public static int GetEyeBlink(ref long timestamp, ref bool isLeftBlink, ref bool isRightBlink)
         {
             return PXR_Plugin.MotionTracking.UPxr_GetEyeBlink(ref timestamp, ref isLeftBlink, ref isRightBlink);

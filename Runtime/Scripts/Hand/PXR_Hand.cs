@@ -1,18 +1,18 @@
 ﻿/*******************************************************************************
-Copyright © 2015-2022 PICO Technology Co., Ltd.All rights reserved.
+Copyright © 2015-2022 PICO Technology Co., Ltd.All rights reserved.  
 
-NOTICE：All information contained herein is, and remains the property of
-PICO Technology Co., Ltd. The intellectual and technical concepts
-contained herein are proprietary to PICO Technology Co., Ltd. and may be
-covered by patents, patents in process, and are protected by trade secret or
-copyright law. Dissemination of this information or reproduction of this
+NOTICE：All information contained herein is, and remains the property of 
+PICO Technology Co., Ltd. The intellectual and technical concepts 
+contained herein are proprietary to PICO Technology Co., Ltd. and may be 
+covered by patents, patents in process, and are protected by trade secret or 
+copyright law. Dissemination of this information or reproduction of this 
 material is strictly forbidden unless prior written permission is obtained from
-PICO Technology Co., Ltd.
+PICO Technology Co., Ltd. 
 *******************************************************************************/
 
 using System.Collections.Generic;
-using Unity.XR.PXR;
 using UnityEngine;
+using Unity.XR.PXR;
 
 public class PXR_Hand : MonoBehaviour
 {
@@ -20,8 +20,6 @@ public class PXR_Hand : MonoBehaviour
     [HideInInspector]
     public List<Transform> handJoints = new List<Transform>(new Transform[(int)HandJoint.JointMax]);
 
-    public Transform WristAnchorTarget;
-    
     public bool Computed { get; private set; }
     public Posef RayPose { get; private set; }
     public bool RayValid { get; private set; }
@@ -65,27 +63,8 @@ public class PXR_Hand : MonoBehaviour
 
                 if (i == (int)HandJoint.JointWrist)
                 {
-#if UNITY_2021_3_OR_NEWER
-                    if (WristAnchorTarget)
-                    {
-                        handJoints[i].SetPositionAndRotation(WristAnchorTarget.position, WristAnchorTarget.rotation);
-                    }
-                    else
-                    {
-                        handJoints[i].SetLocalPositionAndRotation(handJointLocations.jointLocations[i].pose.Position.ToVector3(), handJointLocations.jointLocations[i].pose.Orientation.ToQuat());
-                    }
-#else
-                    if (WristAnchorTarget)
-                    {
-                        handJoints[i].position = WristAnchorTarget.position;
-                        handJoints[i].rotation = WristAnchorTarget.rotation;
-                    } 
-                    else 
-                    {
-                        handJoints[i].localPosition = handJointLocations.jointLocations[i].pose.Position.ToVector3();
-                        handJoints[i].localRotation = handJointLocations.jointLocations[i].pose.Orientation.ToQuat();   
-                    }
-#endif
+                    handJoints[i].localPosition = handJointLocations.jointLocations[i].pose.Position.ToVector3();
+                    handJoints[i].localRotation = handJointLocations.jointLocations[i].pose.Orientation.ToQuat();
                 }
                 else
                 {
@@ -132,12 +111,8 @@ public class PXR_Hand : MonoBehaviour
         if (RayValid)
         {
             rayPose.gameObject.SetActive(true);
-#if UNITY_2021_3_OR_NEWER
-            rayPose.SetLocalPositionAndRotation(RayPose.Position.ToVector3(), RayPose.Orientation.ToQuat());
-#else
             rayPose.localPosition = RayPose.Position.ToVector3();
             rayPose.localRotation = RayPose.Orientation.ToQuat();
-#endif
 
             if (defaultRay != null)
             {

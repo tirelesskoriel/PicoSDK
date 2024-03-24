@@ -992,7 +992,7 @@ namespace Unity.XR.PXR
         /// <summary>
         /// Gets the current user's dominant hand in the system on PICO G3.
         /// </summary>
-        /// <param name="deviceID">Specifies the ID of the PICO device.</param>
+        /// <param name="deviceID"></param>
         public static void GetControllerHandness(ref int deviceID)
         {
             PXR_Plugin.Controller.UPxr_GetControllerHandness(ref deviceID);
